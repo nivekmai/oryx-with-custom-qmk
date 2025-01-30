@@ -32,6 +32,8 @@ Each time you run the GitHub Action, the workflow will:
 7. Flash your downloaded firmware using [Keymapp](https://www.zsa.io/flash#flash-keymap).
 8. Enjoy!
 
-## Oryx Chrome extension
+## Oryx extension
 
-To make building even easier, [@nivekmai](https://github.com/nivekmai) created an [Oryx Chrome extension](https://chromewebstore.google.com/detail/oryx-extension/bocjciklgnhkejkdfilcikhjfbmbcjal) to be able to trigger the GitHub Actions from inside Oryx itself.
+To make building even easier, [@nivekmai](https://github.com/nivekmai) created a [browser extension](https://github.com/nivekmai/oryx-build-extension) to be able to trigger the GitHub Actions from inside Oryx itself.
+
+[Firefox](https://addons.mozilla.org/addon/oryx-extension/) and [Chrome](https://chromewebstore.google.com/detail/bocjciklgnhkejkdfilcikhjfbmbcjal) versions available.
