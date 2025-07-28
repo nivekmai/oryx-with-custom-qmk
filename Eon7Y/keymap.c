@@ -363,56 +363,55 @@ bool rgb_matrix_indicators_user(void) {
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
-          case DUAL_FUNC_0:
-            if (record->tap.count > 0) {
-              if (record->event.pressed) {
-                register_code16(LGUI(LSFT(KC_SPACE)));
-              } else {
-                unregister_code16(LGUI(LSFT(KC_SPACE)));
-              }
+      case DUAL_FUNC_0:
+          if (record->tap.count > 0) {
+            if (record->event.pressed) {
+              register_code16(LGUI(LSFT(KC_SPACE)));
             } else {
-              if (record->event.pressed) {
-                layer_on(2);
-              } else {
-                layer_off(2);
-              }  
+              unregister_code16(LGUI(LSFT(KC_SPACE)));
+            }
+          } else {
+            if (record->event.pressed) {
+              layer_on(2);
+            } else {
+              layer_off(2);
             }  
-            return false;
-        case MOUSE_SCROLL_V:
-            if (record->event.pressed) {
-                is_scrolling_v = !is_scrolling_v;
-            }
-            return false;
-        case MOUSE_SCROLL_VH:
-            if (record->event.pressed) {
-                is_scrolling_vh = !is_scrolling_vh;
-            }
-            return false;
-        case MOUSE_SCROLL_V_HOLD:
-            if (record->event.pressed) {
-                is_hold_scrolling_v = true;
-            } else {
-                is_hold_scrolling_v = false;
-            }
-            return false;
-    }
-    case RGB_SLD:
-        if (rawhid_state.rgb_control) {
-            return false;
-        }
-        if (record->event.pressed) {
-            rgblight_mode(1);
-        }
-        return false;
-    case HSV_0_245_245:
-        if (rawhid_state.rgb_control) {
-            return false;
-        }
-        if (record->event.pressed) {
-            rgblight_mode(1);
-            rgblight_sethsv(0,245,245);
-        }
-        return false;
+          }  
+          return false;
+      case MOUSE_SCROLL_V:
+          if (record->event.pressed) {
+              is_scrolling_v = !is_scrolling_v;
+          }
+          return false;
+      case MOUSE_SCROLL_VH:
+          if (record->event.pressed) {
+              is_scrolling_vh = !is_scrolling_vh;
+          }
+          return false;
+      case MOUSE_SCROLL_V_HOLD:
+          if (record->event.pressed) {
+              is_hold_scrolling_v = true;
+          } else {
+              is_hold_scrolling_v = false;
+          }
+          return false;
+      case RGB_SLD:
+          if (rawhid_state.rgb_control) {
+              return false;
+          }
+          if (record->event.pressed) {
+              rgblight_mode(1);
+          }
+          return false;
+      case HSV_0_245_245:
+          if (rawhid_state.rgb_control) {
+              return false;
+          }
+          if (record->event.pressed) {
+              rgblight_mode(1);
+              rgblight_sethsv(0,245,245);
+          }
+          return false;
   }
   return true;
 }
