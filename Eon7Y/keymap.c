@@ -221,7 +221,7 @@ enum tap_dance_codes {
   DANCE_0,
 };
 
-#define DUAL_FUNC_0 LT(9, KC_F12)
+#define DUAL_FUNC_0 LT(10, KC_F20)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT_moonlander(
@@ -237,7 +237,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_TRANSPARENT, KC_EXLM,        LALT(KC_RIGHT), KC_LCBR,        KC_RCBR,        KC_PIPE,        KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_TRANSPARENT, KC_KP_7,        KC_8,           KC_9,           KC_KP_0,        KC_F12,         
     KC_TRANSPARENT, KC_HASH,        KC_DLR,         KC_LPRN,        KC_RPRN,        KC_F24,         KC_TRANSPARENT,                                                                 KC_ENTER,       KC_LEFT,        KC_DOWN,        KC_UP,          KC_RIGHT,       KC_ENTER,       KC_CAPS,        
     KC_TRANSPARENT, KC_PERC,        KC_CIRC,        KC_LBRC,        KC_RBRC,        LALT(KC_LEFT),                                  KC_AMPR,        KC_1,           KC_LABK,        KC_RABK,        KC_BSLS,        KC_TRANSPARENT, 
-    KC_TRANSPARENT, KC_COMMA,       HSV_0_245_245,  KC_LABK,        KC_RABK,        KC_F24,                                                                                                         KC_TRANSPARENT, KC_MS_BTN3,     KC_F20,         RSFT(KC_MS_BTN3),KC_EQUAL,       KC_TRANSPARENT, 
+    KC_TRANSPARENT, KC_COMMA,       HSV_0_245_245,  KC_LABK,        KC_RABK,        KC_F24,                                                                                                         KC_TRANSPARENT, KC_MS_BTN3,     KC_TRANSPARENT, LGUI(KC_LBRC),  LGUI(KC_RBRC),  KC_TRANSPARENT, 
     KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,                 KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT
   ),
   [2] = LAYOUT_moonlander(
@@ -300,12 +300,18 @@ combo_t key_combos[COMBO_COUNT] = {
 };
 
 
+
 extern rgb_config_t rgb_matrix_config;
+
+RGB hsv_to_rgb_with_value(HSV hsv) {
+  RGB rgb = hsv_to_rgb( hsv );
+  float f = (float)rgb_matrix_config.hsv.v / UINT8_MAX;
+  return (RGB){ f * rgb.r, f * rgb.g, f * rgb.b };
+}
 
 void keyboard_post_init_user(void) {
   rgb_matrix_enable();
 }
-
 
 const uint8_t PROGMEM ledmap[][RGB_MATRIX_LED_COUNT][3] = {
     [0] = { {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206} },
@@ -328,9 +334,8 @@ void set_layer_color(int layer) {
     if (!hsv.h && !hsv.s && !hsv.v) {
         rgb_matrix_set_color( i, 0, 0, 0 );
     } else {
-        RGB rgb = hsv_to_rgb( hsv );
-        float f = (float)rgb_matrix_config.hsv.v / UINT8_MAX;
-        rgb_matrix_set_color( i, f * rgb.r, f * rgb.g, f * rgb.b );   
+        RGB rgb = hsv_to_rgb_with_value(hsv);
+        rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
     }
   }
 }
@@ -339,7 +344,7 @@ bool rgb_matrix_indicators_user(void) {
   if (rawhid_state.rgb_control) {
       return false;
   }
-  if (keyboard_config.disable_layer_led) { return false; }
+    if (keyboard_config.disable_layer_led) { return false; }
   switch (biton32(layer_state)) {
     case 0:
       set_layer_color(0);
@@ -354,10 +359,11 @@ bool rgb_matrix_indicators_user(void) {
       set_layer_color(3);
       break;
    default:
-    if (rgb_matrix_get_flags() == LED_FLAG_NONE)
-      rgb_matrix_set_color_all(0, 0, 0);
-    break;
+      if (rgb_matrix_get_flags() == LED_FLAG_NONE) {
+        rgb_matrix_set_color_all(0, 0, 0);
+      }
   }
+
   return true;
 }
 
