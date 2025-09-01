@@ -189,9 +189,8 @@ void pointing_device_driver_set_cpi(uint16_t cpi) {}
 const key_override_t delete_key_override = ko_make_basic(MOD_MASK_SHIFT, KC_BSPC, KC_DEL);
 
 // This globally defines all key overrides to be used
-const key_override_t **key_overrides = (const key_override_t *[]){
-    &delete_key_override,
-    NULL // Null terminate the array of overrides!
+const key_override_t *key_overrides[] = {
+	&delete_key_override
 };
 
 // "Remapping" keys 'cause ZSA won't let me put custom enums in Oryx -_-
