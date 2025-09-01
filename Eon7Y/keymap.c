@@ -16,7 +16,7 @@ enum tap_dance_codes {
   DANCE_0,
 };
 
-#define DUAL_FUNC_0 LT(10, KC_F20)
+#define DUAL_FUNC_0 LT(2, KC_F12)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT_moonlander(
@@ -95,6 +95,12 @@ combo_t key_combos[COMBO_COUNT] = {
 };
 
 
+bool capslock_active = false;
+
+bool led_update_user(led_t led_state) {
+  capslock_active = led_state.caps_lock;
+  return true;
+}
 
 extern rgb_config_t rgb_matrix_config;
 
@@ -139,68 +145,38 @@ bool rgb_matrix_indicators_user(void) {
   if (rawhid_state.rgb_control) {
       return false;
   }
-    if (keyboard_config.disable_layer_led) { return false; }
-  switch (biton32(layer_state)) {
-    case 0:
-      set_layer_color(0);
-      break;
-    case 1:
-      set_layer_color(1);
-      break;
-    case 2:
-      set_layer_color(2);
-      break;
-    case 3:
-      set_layer_color(3);
-      break;
-   default:
-      if (rgb_matrix_get_flags() == LED_FLAG_NONE) {
-        rgb_matrix_set_color_all(0, 0, 0);
-      }
+  if (!keyboard_config.disable_layer_led) { 
+    switch (biton32(layer_state)) {
+      case 0:
+        set_layer_color(0);
+        break;
+      case 1:
+        set_layer_color(1);
+        break;
+      case 2:
+        set_layer_color(2);
+        break;
+      case 3:
+        set_layer_color(3);
+        break;
+     default:
+        if (rgb_matrix_get_flags() == LED_FLAG_NONE) {
+          rgb_matrix_set_color_all(0, 0, 0);
+        }
+    }
+  } else {
+    if (rgb_matrix_get_flags() == LED_FLAG_NONE) {
+      rgb_matrix_set_color_all(0, 0, 0);
+    }
   }
 
+  if (capslock_active && biton32(layer_state) == 1) {
+    RGB rgb = hsv_to_rgb_with_value((HSV) { 151, 255, 148 });
+    rgb_matrix_set_color( 38, rgb.r, rgb.g, rgb.b );
+  } 
   return true;
 }
 
-
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-  switch (keycode) {
-
-    case DUAL_FUNC_0:
-      if (record->tap.count > 0) {
-        if (record->event.pressed) {
-          register_code16(LGUI(LSFT(KC_SPACE)));
-        } else {
-          unregister_code16(LGUI(LSFT(KC_SPACE)));
-        }
-      } else {
-        if (record->event.pressed) {
-          layer_on(2);
-        } else {
-          layer_off(2);
-        }  
-      }  
-      return false;
-    case RGB_SLD:
-        if (rawhid_state.rgb_control) {
-            return false;
-        }
-        if (record->event.pressed) {
-            rgblight_mode(1);
-        }
-        return false;
-    case HSV_0_245_245:
-        if (rawhid_state.rgb_control) {
-            return false;
-        }
-        if (record->event.pressed) {
-            rgblight_mode(1);
-            rgblight_sethsv(0,245,245);
-        }
-        return false;
-  }
-  return true;
-}
 
 
 typedef struct {
@@ -275,3 +251,43 @@ void dance_0_reset(tap_dance_state_t *state, void *user_data) {
 tap_dance_action_t tap_dance_actions[] = {
         [DANCE_0] = ACTION_TAP_DANCE_FN_ADVANCED(on_dance_0, dance_0_finished, dance_0_reset),
 };
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  switch (keycode) {
+
+    case DUAL_FUNC_0:
+      if (record->tap.count > 0) {
+        if (record->event.pressed) {
+          register_code16(LGUI(LSFT(KC_SPACE)));
+        } else {
+          unregister_code16(LGUI(LSFT(KC_SPACE)));
+        }
+      } else {
+        if (record->event.pressed) {
+          layer_on(2);
+        } else {
+          layer_off(2);
+        }  
+      }  
+      return false;
+    case RGB_SLD:
+        if (rawhid_state.rgb_control) {
+            return false;
+        }
+        if (record->event.pressed) {
+            rgblight_mode(1);
+        }
+        return false;
+    case HSV_0_245_245:
+        if (rawhid_state.rgb_control) {
+            return false;
+        }
+        if (record->event.pressed) {
+            rgblight_mode(1);
+            rgblight_sethsv(0,245,245);
+        }
+        return false;
+  }
+  return true;
+}
+
