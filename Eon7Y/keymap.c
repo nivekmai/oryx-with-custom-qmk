@@ -221,7 +221,7 @@ enum tap_dance_codes {
   DANCE_0,
 };
 
-#define DUAL_FUNC_0 LT(9, KC_F12)
+#define DUAL_FUNC_0 LT(2, KC_F12)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT_moonlander(
@@ -237,7 +237,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     KC_TRANSPARENT, KC_EXLM,        LALT(KC_RIGHT), KC_LCBR,        KC_RCBR,        KC_PIPE,        KC_TRANSPARENT,                                 KC_TRANSPARENT, KC_TRANSPARENT, KC_KP_7,        KC_8,           KC_9,           KC_KP_0,        KC_F12,         
     KC_TRANSPARENT, KC_HASH,        KC_DLR,         KC_LPRN,        KC_RPRN,        KC_F24,         KC_TRANSPARENT,                                                                 KC_ENTER,       KC_LEFT,        KC_DOWN,        KC_UP,          KC_RIGHT,       KC_ENTER,       KC_CAPS,        
     KC_TRANSPARENT, KC_PERC,        KC_CIRC,        KC_LBRC,        KC_RBRC,        LALT(KC_LEFT),                                  KC_AMPR,        KC_1,           KC_LABK,        KC_RABK,        KC_BSLS,        KC_TRANSPARENT, 
-    KC_TRANSPARENT, KC_COMMA,       HSV_0_245_245,  KC_LABK,        KC_RABK,        KC_F24,                                                                                                         KC_TRANSPARENT, KC_MS_BTN3,     KC_F20,         RSFT(KC_MS_BTN3),KC_EQUAL,       KC_TRANSPARENT, 
+    KC_TRANSPARENT, KC_COMMA,       HSV_0_245_245,  KC_LABK,        KC_RABK,        KC_F24,                                                                                                         KC_TRANSPARENT, KC_MS_BTN3,     KC_TRANSPARENT, LGUI(KC_LBRC),  LGUI(KC_RBRC),  KC_TRANSPARENT, 
     KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT,                 KC_TRANSPARENT, KC_TRANSPARENT, KC_TRANSPARENT
   ),
   [2] = LAYOUT_moonlander(
@@ -300,12 +300,24 @@ combo_t key_combos[COMBO_COUNT] = {
 };
 
 
+bool capslock_active = false;
+
+bool led_update_user(led_t led_state) {
+  capslock_active = led_state.caps_lock;
+  return true;
+}
+
 extern rgb_config_t rgb_matrix_config;
+
+RGB hsv_to_rgb_with_value(HSV hsv) {
+  RGB rgb = hsv_to_rgb( hsv );
+  float f = (float)rgb_matrix_config.hsv.v / UINT8_MAX;
+  return (RGB){ f * rgb.r, f * rgb.g, f * rgb.b };
+}
 
 void keyboard_post_init_user(void) {
   rgb_matrix_enable();
 }
-
 
 const uint8_t PROGMEM ledmap[][RGB_MATRIX_LED_COUNT][3] = {
     [0] = { {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206}, {74,255,206} },
@@ -328,9 +340,8 @@ void set_layer_color(int layer) {
     if (!hsv.h && !hsv.s && !hsv.v) {
         rgb_matrix_set_color( i, 0, 0, 0 );
     } else {
-        RGB rgb = hsv_to_rgb( hsv );
-        float f = (float)rgb_matrix_config.hsv.v / UINT8_MAX;
-        rgb_matrix_set_color( i, f * rgb.r, f * rgb.g, f * rgb.b );   
+        RGB rgb = hsv_to_rgb_with_value(hsv);
+        rgb_matrix_set_color(i, rgb.r, rgb.g, rgb.b);
     }
   }
 }
@@ -339,80 +350,35 @@ bool rgb_matrix_indicators_user(void) {
   if (rawhid_state.rgb_control) {
       return false;
   }
-  if (keyboard_config.disable_layer_led) { return false; }
-  switch (biton32(layer_state)) {
-    case 0:
-      set_layer_color(0);
-      break;
-    case 1:
-      set_layer_color(1);
-      break;
-    case 2:
-      set_layer_color(2);
-      break;
-    case 3:
-      set_layer_color(3);
-      break;
-   default:
-    if (rgb_matrix_get_flags() == LED_FLAG_NONE)
+  if (!keyboard_config.disable_layer_led) { 
+    switch (biton32(layer_state)) {
+      case 0:
+        set_layer_color(0);
+        break;
+      case 1:
+        set_layer_color(1);
+        break;
+      case 2:
+        set_layer_color(2);
+        break;
+      case 3:
+        set_layer_color(3);
+        break;
+     default:
+        if (rgb_matrix_get_flags() == LED_FLAG_NONE) {
+          rgb_matrix_set_color_all(0, 0, 0);
+        }
+    }
+  } else {
+    if (rgb_matrix_get_flags() == LED_FLAG_NONE) {
       rgb_matrix_set_color_all(0, 0, 0);
-    break;
+    }
   }
-  return true;
-}
 
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-      case DUAL_FUNC_0:
-          if (record->tap.count > 0) {
-            if (record->event.pressed) {
-              register_code16(LGUI(LSFT(KC_SPACE)));
-            } else {
-              unregister_code16(LGUI(LSFT(KC_SPACE)));
-            }
-          } else {
-            if (record->event.pressed) {
-              layer_on(2);
-            } else {
-              layer_off(2);
-            }  
-          }  
-          return false;
-      case MOUSE_SCROLL_V:
-          if (record->event.pressed) {
-              is_scrolling_v = !is_scrolling_v;
-          }
-          return false;
-      case MOUSE_SCROLL_VH:
-          if (record->event.pressed) {
-              is_scrolling_vh = !is_scrolling_vh;
-          }
-          return false;
-      case MOUSE_SCROLL_V_HOLD:
-          if (record->event.pressed) {
-              is_hold_scrolling_v = true;
-          } else {
-              is_hold_scrolling_v = false;
-          }
-          return false;
-      case RGB_SLD:
-          if (rawhid_state.rgb_control) {
-              return false;
-          }
-          if (record->event.pressed) {
-              rgblight_mode(1);
-          }
-          return false;
-      case HSV_0_245_245:
-          if (rawhid_state.rgb_control) {
-              return false;
-          }
-          if (record->event.pressed) {
-              rgblight_mode(1);
-              rgblight_sethsv(0,245,245);
-          }
-          return false;
-  }
+  if (capslock_active && biton32(layer_state) == 1) {
+    RGB rgb = hsv_to_rgb_with_value((HSV) { 151, 255, 148 });
+    rgb_matrix_set_color( 38, rgb.r, rgb.g, rgb.b );
+  } 
   return true;
 }
 
@@ -490,6 +456,61 @@ void dance_0_reset(tap_dance_state_t *state, void *user_data) {
 tap_dance_action_t tap_dance_actions[] = {
         [DANCE_0] = ACTION_TAP_DANCE_FN_ADVANCED(on_dance_0, dance_0_finished, dance_0_reset),
 };
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  switch (keycode) {
+    case DUAL_FUNC_0:
+      if (record->tap.count > 0) {
+        if (record->event.pressed) {
+          register_code16(LGUI(LSFT(KC_SPACE)));
+        } else {
+          unregister_code16(LGUI(LSFT(KC_SPACE)));
+        }
+      } else {
+        if (record->event.pressed) {
+          layer_on(2);
+        } else {
+          layer_off(2);
+        }  
+      }  
+      return false;
+    case RGB_SLD:
+        if (rawhid_state.rgb_control) {
+            return false;
+        }
+        if (record->event.pressed) {
+            rgblight_mode(1);
+        }
+        return false;
+    case HSV_0_245_245:
+        if (rawhid_state.rgb_control) {
+            return false;
+        }
+        if (record->event.pressed) {
+            rgblight_mode(1);
+            rgblight_sethsv(0,245,245);
+        }
+        return false;
+    case MOUSE_SCROLL_V:
+        if (record->event.pressed) {
+            is_scrolling_v = !is_scrolling_v;
+        }
+        return false;
+    case MOUSE_SCROLL_VH:
+        if (record->event.pressed) {
+            is_scrolling_vh = !is_scrolling_vh;
+        }
+        return false;
+    case MOUSE_SCROLL_V_HOLD:
+        if (record->event.pressed) {
+            is_hold_scrolling_v = true;
+        } else {
+            is_hold_scrolling_v = false;
+        }
+        return false;
+  }
+  return true;
+}
 
 // Remove keymaps
 #undef KC_F24
