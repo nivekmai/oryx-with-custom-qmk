@@ -12,6 +12,7 @@ on:
         type: choice
         options:
           - voyager
+          - moonlander
           - moonlander/reva
           - moonlander/revb
           - ergodox_ez
